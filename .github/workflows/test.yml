@@ -21,10 +21,10 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
@@ -41,7 +41,7 @@ jobs:
 
     - name: Upload coverage
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-      uses: codecov/codecov-action@v6
+      uses: codecov/codecov-action@v7
       with:
         files: ./mcp-server/coverage.xml
         fail_ci_if_error: false
@@ -51,10 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
         cache: 'pip'
@@ -69,14 +69,14 @@ jobs:
       run: ruff check mcp-server/ --output-format=github
 
     - name: mypy
-      run: mypy mcp-server/ --ignore-missing-imports --install-types --non-interactive
+      run: mypy --ignore-missing-imports --install-types --non-interactive mcp-server/server.py mcp-server/client.py mcp-server/tools/
 
   docs:
     name: Docs
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
     - name: Check Markdown links
       uses: gaurav-nelson/github-action-markdown-link-check@v1
