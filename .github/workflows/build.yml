@@ -33,7 +33,7 @@ jobs:
         with:
           path: imhexMCP
 
-    - name: Clone ImHex
+      - name: Clone ImHex
         shell: bash
         run: |
           git clone --depth=1 https://github.com/WerWolv/ImHex.git
