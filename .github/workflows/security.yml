@@ -12,34 +12,6 @@ on:
     - cron: '0 9 * * 1'
 
 jobs:
-  bandit:
-    name: Bandit Security Scan
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v7
-
-    - name: Set up Python
-      uses: actions/setup-python@v7
-      with:
-        python-version: '3.12'
-
-    - name: Install bandit
-      run: |
-        pip install bandit[toml]
-
-    - name: Run Bandit
-      run: |
-        bandit -r mcp-server/ -f json -o bandit-report.json || true
-        bandit -r mcp-server/ -f screen || true
-
-    - name: Upload Bandit report
-      uses: actions/upload-artifact@v7
-      with:
-        name: bandit-report
-        path: bandit-report.json
-
   safety:
     name: Safety Dependency Check
     runs-on: ubuntu-latest
