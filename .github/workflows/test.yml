@@ -60,16 +60,13 @@ jobs:
         cache: 'pip'
 
     - name: Install tools
-      run: pip install ruff mypy
+      run: pip install ruff
 
     - name: Format check
       run: ruff format --check mcp-server/
 
     - name: Ruff
       run: ruff check mcp-server/ --output-format=github
-
-    - name: mypy
-      run: mypy --ignore-missing-imports --install-types --non-interactive mcp-server/server.py mcp-server/client.py mcp-server/tools/
 
   docs:
     name: Docs

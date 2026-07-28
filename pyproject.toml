@@ -31,7 +31,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.0",
     "mypy>=1.10",
-    "ipython>=9.15.0",
+    "ipython>=8.0",
 ]
 lint = [
     "ruff>=0.16.0",
