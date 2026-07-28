@@ -1,4 +1,4 @@
-from tools import TOOLS, HANDLERS
+from tools import HANDLERS, TOOLS
 
 
 def test_tools_registered():
@@ -8,9 +8,9 @@ def test_tools_registered():
 def test_handlers_match_tools():
     tool_names = {t.name for t in TOOLS}
     handler_names = set(HANDLERS.keys())
-    assert tool_names == handler_names, (
-        f"Mismatch: tools={tool_names - handler_names}, extra_handlers={handler_names - tool_names}"
-    )
+    assert (
+        tool_names == handler_names
+    ), f"Mismatch: tools={tool_names - handler_names}, extra_handlers={handler_names - tool_names}"
 
 
 def test_each_tool_has_schema():

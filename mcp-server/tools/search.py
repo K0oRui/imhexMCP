@@ -1,12 +1,146 @@
-from mcp.types import Tool
 from client import ImHexClient
+from mcp.types import Tool
 
 TOOLS = [
-    Tool(name="search", description="Search for a hex/text/regex pattern in the currently open file", inputSchema={"type": "object", "properties": {"pattern": {"type": "string", "description": "Pattern to search for"}, "type": {"type": "string", "enum": ["hex", "text", "regex"], "description": "Search type"}, "offset": {"type": "integer", "description": "Result offset for pagination", "minimum": 0}, "limit": {"type": "integer", "description": "Max results", "minimum": 1, "maximum": 100000}}, "required": ["pattern", "type"]}),
-    Tool(name="multi_search", description="Search for multiple patterns simultaneously", inputSchema={"type": "object", "properties": {"patterns": {"type": "array", "items": {"type": "object", "properties": {"pattern": {"type": "string"}, "type": {"type": "string", "enum": ["hex", "text"]}}, "required": ["pattern", "type"]}, "minItems": 1, "maxItems": 20}, "limit": {"type": "integer", "description": "Max results per pattern", "minimum": 1, "maximum": 100000}}, "required": ["patterns"]}),
-    Tool(name="export_search_results", description="Export search matches to JSON or CSV", inputSchema={"type": "object", "properties": {"matches": {"type": "array", "items": {"type": "integer"}, "description": "Array of match offsets"}, "output_path": {"type": "string", "description": "Output file path"}, "format": {"type": "string", "enum": ["json", "csv"], "description": "Export format"}, "context_bytes": {"type": "integer", "description": "Context bytes per match", "minimum": 0, "maximum": 256}}, "required": ["matches", "output_path"]}),
-    Tool(name="search_multi", description="Alias for multi_search", inputSchema={"type": "object", "properties": {"patterns": {"type": "array", "items": {"type": "object", "properties": {"pattern": {"type": "string"}, "type": {"type": "string", "enum": ["hex", "text"]}}, "required": ["pattern", "type"]}, "minItems": 1, "maxItems": 20}, "limit": {"type": "integer", "description": "Max results per pattern", "minimum": 1, "maximum": 100000}}, "required": ["patterns"]}),
-    Tool(name="export_search", description="Alias for export_search_results", inputSchema={"type": "object", "properties": {"matches": {"type": "array", "items": {"type": "integer"}, "description": "Array of match offsets"}, "output_path": {"type": "string", "description": "Output file path"}, "format": {"type": "string", "enum": ["json", "csv"], "description": "Export format"}, "context_bytes": {"type": "integer", "description": "Context bytes per match", "minimum": 0, "maximum": 256}}, "required": ["matches", "output_path"]}),
+    Tool(
+        name="search",
+        description="Search for a hex/text/regex pattern in the currently open file",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string", "description": "Pattern to search for"},
+                "type": {
+                    "type": "string",
+                    "enum": ["hex", "text", "regex"],
+                    "description": "Search type",
+                },
+                "offset": {
+                    "type": "integer",
+                    "description": "Result offset for pagination",
+                    "minimum": 0,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results",
+                    "minimum": 1,
+                    "maximum": 100000,
+                },
+            },
+            "required": ["pattern", "type"],
+        },
+    ),
+    Tool(
+        name="multi_search",
+        description="Search for multiple patterns simultaneously",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "pattern": {"type": "string"},
+                            "type": {"type": "string", "enum": ["hex", "text"]},
+                        },
+                        "required": ["pattern", "type"],
+                    },
+                    "minItems": 1,
+                    "maxItems": 20,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results per pattern",
+                    "minimum": 1,
+                    "maximum": 100000,
+                },
+            },
+            "required": ["patterns"],
+        },
+    ),
+    Tool(
+        name="export_search_results",
+        description="Export search matches to JSON or CSV",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Array of match offsets",
+                },
+                "output_path": {"type": "string", "description": "Output file path"},
+                "format": {
+                    "type": "string",
+                    "enum": ["json", "csv"],
+                    "description": "Export format",
+                },
+                "context_bytes": {
+                    "type": "integer",
+                    "description": "Context bytes per match",
+                    "minimum": 0,
+                    "maximum": 256,
+                },
+            },
+            "required": ["matches", "output_path"],
+        },
+    ),
+    Tool(
+        name="search_multi",
+        description="Alias for multi_search",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "pattern": {"type": "string"},
+                            "type": {"type": "string", "enum": ["hex", "text"]},
+                        },
+                        "required": ["pattern", "type"],
+                    },
+                    "minItems": 1,
+                    "maxItems": 20,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results per pattern",
+                    "minimum": 1,
+                    "maximum": 100000,
+                },
+            },
+            "required": ["patterns"],
+        },
+    ),
+    Tool(
+        name="export_search",
+        description="Alias for export_search_results",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "matches": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Array of match offsets",
+                },
+                "output_path": {"type": "string", "description": "Output file path"},
+                "format": {
+                    "type": "string",
+                    "enum": ["json", "csv"],
+                    "description": "Export format",
+                },
+                "context_bytes": {
+                    "type": "integer",
+                    "description": "Context bytes per match",
+                    "minimum": 0,
+                    "maximum": 256,
+                },
+            },
+            "required": ["matches", "output_path"],
+        },
+    ),
 ]
 
 
@@ -20,7 +154,9 @@ def handle_search(client: ImHexClient, args: dict) -> str:
     matches = d.get("matches", [])
     total = d.get("total_matches", len(matches))
     offset = args.get("offset", 0)
-    lines = [f"Pattern: '{args['pattern']}' ({args['type']})  Total: {total}  Showing: {len(matches)}"]
+    lines = [
+        f"Pattern: '{args['pattern']}' ({args['type']})  Total: {total}  Showing: {len(matches)}"
+    ]
     for i, m in enumerate(matches[:100], 1):
         lines.append(f"  {offset + i}. 0x{m:X}")
     if d.get("has_more"):
@@ -36,7 +172,9 @@ def handle_multi_search(client: ImHexClient, args: dict) -> str:
     results = d.get("results", [])
     lines = [f"Multi-pattern search ({d.get('patterns_searched', 0)} patterns):"]
     for i, p in enumerate(results, 1):
-        lines.append(f"  [{i}] '{p.get('pattern', '')}' ({p.get('type', '')}) - {p.get('count', 0)} matches")
+        lines.append(
+            f"  [{i}] '{p.get('pattern', '')}' ({p.get('type', '')}) - {p.get('count', 0)} matches"
+        )
         for j, m in enumerate(p.get("matches", [])[:5], 1):
             lines.append(f"       {j}. 0x{m:X}")
     return "\n".join(lines)

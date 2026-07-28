@@ -1,6 +1,7 @@
 import json
 import socket
 import threading
+
 from client import ImHexClient, ImHexError
 
 
@@ -19,7 +20,9 @@ def test_send_command():
         data = conn.recv(4096)
         req = json.loads(data.decode().strip())
         assert req["endpoint"] == "test/ping"
-        conn.sendall(json.dumps({"status": "ok", "data": {"pong": True}}).encode() + b"\n")
+        conn.sendall(
+            json.dumps({"status": "ok", "data": {"pong": True}}).encode() + b"\n"
+        )
         conn.close()
         s.close()
 
@@ -29,6 +32,7 @@ def test_send_command():
 
     # Wait for port
     import time
+
     time.sleep(0.2)
     port = results[0]
 
@@ -49,13 +53,17 @@ def test_send_command_error():
         s.listen(1)
         s.settimeout(3)
         conn, _ = s.accept()
-        data = conn.recv(4096)
-        conn.sendall(json.dumps({"status": "error", "data": {"error": "bad stuff"}}).encode() + b"\n")
+        conn.recv(4096)
+        conn.sendall(
+            json.dumps({"status": "error", "data": {"error": "bad stuff"}}).encode()
+            + b"\n"
+        )
         conn.close()
         s.close()
 
     threading.Thread(target=server, daemon=True).start()
     import time
+
     time.sleep(0.2)
     port = results[0]
 

@@ -11,7 +11,9 @@ class ImHexError(Exception):
 
 
 class ImHexClient:
-    def __init__(self, host: str = "localhost", port: int = 31337, timeout: float = 30.0):
+    def __init__(
+        self, host: str = "localhost", port: int = 31337, timeout: float = 30.0
+    ):
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -28,7 +30,9 @@ class ImHexClient:
                 return
             except Exception:
                 self.disconnect()
-        self._sock = socket.create_connection((self.host, self.port), timeout=self.timeout)
+        self._sock = socket.create_connection(
+            (self.host, self.port), timeout=self.timeout
+        )
         self._sock.settimeout(self.timeout)
 
     def disconnect(self):
@@ -39,7 +43,9 @@ class ImHexClient:
                 pass
             self._sock = None
 
-    def send_command(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+    def send_command(
+        self, endpoint: str, data: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         for attempt in range(2):
             try:
                 if not self._sock:
@@ -59,7 +65,7 @@ class ImHexClient:
                     msg = result.get("data", {}).get("error", "Unknown error")
                     raise ImHexError(msg)
                 return result
-            except (socket.timeout, ConnectionError, OSError):
+            except (TimeoutError, ConnectionError, OSError):
                 self.disconnect()
                 if attempt == 1:
                     raise ImHexError("Connection lost")

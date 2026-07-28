@@ -1,26 +1,214 @@
 from pathlib import Path
-from mcp.types import Tool
+
 from client import ImHexClient
+from mcp.types import Tool
 
 TOOLS = [
-    Tool(name="get_capabilities", description="Get ImHex build version, commit, branch, and available commands", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="set_pattern_code", description="Set pattern language code in ImHex for binary data parsing", inputSchema={"type": "object", "properties": {"code": {"type": "string", "description": "Pattern language code"}}, "required": ["code"]}),
-    Tool(name="open_file", description="Open a file in ImHex for analysis", inputSchema={"type": "object", "properties": {"path": {"type": "string", "description": "Path to the file to open"}}, "required": ["path"]}),
-    Tool(name="list_files", description="List all currently open files in ImHex", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="switch_file", description="Switch the active file/provider in ImHex", inputSchema={"type": "object", "properties": {"provider_id": {"type": "integer", "description": "Provider ID to switch to", "minimum": 0}}, "required": ["provider_id"]}),
-    Tool(name="close_file", description="Close a specific file/provider in ImHex", inputSchema={"type": "object", "properties": {"provider_id": {"type": "integer", "description": "Provider ID to close", "minimum": 0}}, "required": ["provider_id"]}),
-    Tool(name="compare_files", description="Compare two open files at byte level", inputSchema={"type": "object", "properties": {"provider_id_1": {"type": "integer", "description": "First provider ID", "minimum": 0}, "provider_id_2": {"type": "integer", "description": "Second provider ID", "minimum": 0}}, "required": ["provider_id_1", "provider_id_2"]}),
-    Tool(name="provider_info", description="Get information about the currently open file/provider", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="export_data", description="Export a region of data to a file", inputSchema={"type": "object", "properties": {"offset": {"type": "integer", "description": "Start offset", "minimum": 0}, "length": {"type": "integer", "description": "Bytes to export", "minimum": 1, "maximum": 104857600}, "output_path": {"type": "string", "description": "Output file path"}, "format": {"type": "string", "enum": ["binary", "hex", "base64"], "description": "Export format"}}, "required": ["offset", "length", "output_path"]}),
-    Tool(name="list_providers", description="List all providers with their IDs", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="save_file", description="Save the current file to disk", inputSchema={"type": "object", "properties": {"path": {"type": "string", "description": "Optional path to save as (save-as)"}}, "required": []}),
-    Tool(name="undo", description="Undo the last write operation", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="redo", description="Redo the last undone operation", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="undo_status", description="Check if undo/redo is available", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="create_file", description="Create a new empty file provider", inputSchema={"type": "object", "properties": {}, "required": []}),
-    Tool(name="mem_new_provider", description="Create an in-memory provider from hex data", inputSchema={"type": "object", "properties": {"data": {"type": "string", "description": "Hex data to load"}, "name": {"type": "string", "description": "Optional provider name"}}, "required": ["data"]}),
-    Tool(name="patch_export", description="Export patches to IPS format", inputSchema={"type": "object", "properties": {"format": {"type": "string", "enum": ["ips", "ips32"], "description": "Patch format", "default": "ips"}}, "required": []}),
-    Tool(name="bookmark_edit", description="Edit an existing bookmark by ID", inputSchema={"type": "object", "properties": {"id": {"type": "integer", "description": "Bookmark ID to edit"}, "name": {"type": "string", "description": "New name"}, "comment": {"type": "string", "description": "New comment"}, "color": {"type": "string", "description": "New RGBA hex color (e.g. FF0000FF)", "pattern": "^[0-9A-Fa-f]{8}$"}, "offset": {"type": "integer", "description": "New offset", "minimum": 0}, "size": {"type": "integer", "description": "New size", "minimum": 1}}, "required": ["id"]}),
+    Tool(
+        name="get_capabilities",
+        description="Get ImHex build version, commit, branch, and available commands",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="set_pattern_code",
+        description="Set pattern language code in ImHex for binary data parsing",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Pattern language code"}
+            },
+            "required": ["code"],
+        },
+    ),
+    Tool(
+        name="open_file",
+        description="Open a file in ImHex for analysis",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Path to the file to open"}
+            },
+            "required": ["path"],
+        },
+    ),
+    Tool(
+        name="list_files",
+        description="List all currently open files in ImHex",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="switch_file",
+        description="Switch the active file/provider in ImHex",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "provider_id": {
+                    "type": "integer",
+                    "description": "Provider ID to switch to",
+                    "minimum": 0,
+                }
+            },
+            "required": ["provider_id"],
+        },
+    ),
+    Tool(
+        name="close_file",
+        description="Close a specific file/provider in ImHex",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "provider_id": {
+                    "type": "integer",
+                    "description": "Provider ID to close",
+                    "minimum": 0,
+                }
+            },
+            "required": ["provider_id"],
+        },
+    ),
+    Tool(
+        name="compare_files",
+        description="Compare two open files at byte level",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "provider_id_1": {
+                    "type": "integer",
+                    "description": "First provider ID",
+                    "minimum": 0,
+                },
+                "provider_id_2": {
+                    "type": "integer",
+                    "description": "Second provider ID",
+                    "minimum": 0,
+                },
+            },
+            "required": ["provider_id_1", "provider_id_2"],
+        },
+    ),
+    Tool(
+        name="provider_info",
+        description="Get information about the currently open file/provider",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="export_data",
+        description="Export a region of data to a file",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "offset": {
+                    "type": "integer",
+                    "description": "Start offset",
+                    "minimum": 0,
+                },
+                "length": {
+                    "type": "integer",
+                    "description": "Bytes to export",
+                    "minimum": 1,
+                    "maximum": 104857600,
+                },
+                "output_path": {"type": "string", "description": "Output file path"},
+                "format": {
+                    "type": "string",
+                    "enum": ["binary", "hex", "base64"],
+                    "description": "Export format",
+                },
+            },
+            "required": ["offset", "length", "output_path"],
+        },
+    ),
+    Tool(
+        name="list_providers",
+        description="List all providers with their IDs",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="save_file",
+        description="Save the current file to disk",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Optional path to save as (save-as)",
+                }
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="undo",
+        description="Undo the last write operation",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="redo",
+        description="Redo the last undone operation",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="undo_status",
+        description="Check if undo/redo is available",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="create_file",
+        description="Create a new empty file provider",
+        inputSchema={"type": "object", "properties": {}, "required": []},
+    ),
+    Tool(
+        name="mem_new_provider",
+        description="Create an in-memory provider from hex data",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "data": {"type": "string", "description": "Hex data to load"},
+                "name": {"type": "string", "description": "Optional provider name"},
+            },
+            "required": ["data"],
+        },
+    ),
+    Tool(
+        name="patch_export",
+        description="Export patches to IPS format",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "format": {
+                    "type": "string",
+                    "enum": ["ips", "ips32"],
+                    "description": "Patch format",
+                    "default": "ips",
+                }
+            },
+            "required": [],
+        },
+    ),
+    Tool(
+        name="bookmark_edit",
+        description="Edit an existing bookmark by ID",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "id": {"type": "integer", "description": "Bookmark ID to edit"},
+                "name": {"type": "string", "description": "New name"},
+                "comment": {"type": "string", "description": "New comment"},
+                "color": {
+                    "type": "string",
+                    "description": "New RGBA hex color (e.g. FF0000FF)",
+                    "pattern": "^[0-9A-Fa-f]{8}$",
+                },
+                "offset": {
+                    "type": "integer",
+                    "description": "New offset",
+                    "minimum": 0,
+                },
+                "size": {"type": "integer", "description": "New size", "minimum": 1},
+            },
+            "required": ["id"],
+        },
+    ),
 ]
 
 
@@ -42,6 +230,7 @@ def handle_open_file(client: ImHexClient, args: dict) -> str:
     if request_id is None:
         return f"File open requested: {args['path']}"
     import time
+
     for _ in range(20):
         time.sleep(0.15)
         status = client.send_command("file/open/status", {"request_id": request_id})
@@ -66,25 +255,35 @@ def handle_list_files(client: ImHexClient, _args: dict) -> str:
     lines = [f"Open files ({len(files)}):"]
     for f in files:
         active = " [ACTIVE]" if f.get("is_active") else ""
-        lines.append(f"  ID {f.get('id')}: {f.get('name')}{active}  ({f.get('size', 0):,} bytes)")
+        lines.append(
+            f"  ID {f.get('id')}: {f.get('name')}{active}  ({f.get('size', 0):,} bytes)"
+        )
     return "\n".join(lines)
 
 
 def handle_switch_file(client: ImHexClient, args: dict) -> str:
-    d = client.send_command("file/switch", {"provider_id": args["provider_id"]}).get("data", {})
+    d = client.send_command("file/switch", {"provider_id": args["provider_id"]}).get(
+        "data", {}
+    )
     return f"Switched to: {d.get('name', '')} (ID {args['provider_id']})  Size: {d.get('size', 0):,} bytes"
 
 
 def handle_close_file(client: ImHexClient, args: dict) -> str:
-    name = client.send_command("file/close", {"provider_id": args["provider_id"]}).get("data", {}).get("name", "")
+    name = (
+        client.send_command("file/close", {"provider_id": args["provider_id"]})
+        .get("data", {})
+        .get("name", "")
+    )
     return f"Closed: {name} (ID {args['provider_id']})"
 
 
 def handle_compare_files(client: ImHexClient, args: dict) -> str:
     d = client.send_command("file/compare", args).get("data", {})
     c = d.get("comparison", {})
-    return (f"File 1: {d.get('file1', {}).get('name', '?')}  File 2: {d.get('file2', {}).get('name', '?')}\n"
-            f"Bytes compared: {c.get('bytes_compared', 0):,}  Differences: {c.get('differences', 0):,}  Similarity: {c.get('similarity_percent', 0):.2f}%")
+    return (
+        f"File 1: {d.get('file1', {}).get('name', '?')}  File 2: {d.get('file2', {}).get('name', '?')}\n"
+        f"Bytes compared: {c.get('bytes_compared', 0):,}  Differences: {c.get('differences', 0):,}  Similarity: {c.get('similarity_percent', 0):.2f}%"
+    )
 
 
 def handle_provider_info(client: ImHexClient, _args: dict) -> str:
@@ -105,7 +304,9 @@ def handle_list_providers(client: ImHexClient, _args: dict) -> str:
         return "No providers"
     lines = [f"Providers ({len(files)}):"]
     for f in files:
-        lines.append(f"  ID {f.get('id')}: {f.get('name')}  ({f.get('size', 0):,} bytes)")
+        lines.append(
+            f"  ID {f.get('id')}: {f.get('name')}  ({f.get('size', 0):,} bytes)"
+        )
     return "\n".join(lines)
 
 
@@ -150,7 +351,9 @@ def handle_mem_new_provider(client: ImHexClient, args: dict) -> str:
 
 
 def handle_patch_export(client: ImHexClient, args: dict) -> str:
-    d = client.send_command("patch/export", {"format": args.get("format", "ips")}).get("data", {})
+    d = client.send_command("patch/export", {"format": args.get("format", "ips")}).get(
+        "data", {}
+    )
     if d.get("success"):
         patch = d.get("patch_data", "")
         size = d.get("patch_size", 0)

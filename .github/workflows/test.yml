@@ -1,0 +1,91 @@
+name: Test
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        pip install -r mcp-server/requirements.txt
+        pip install -r mcp-server/dev-requirements.txt
+
+    - name: Run tests
+      run: |
+        cd mcp-server
+        python -m pytest -v --tb=short --cov=. --cov-report=xml --cov-report=term
+
+    - name: Upload coverage
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+      uses: codecov/codecov-action@v6
+      with:
+        files: ./mcp-server/coverage.xml
+        fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install tools
+      run: pip install black ruff mypy
+
+    - name: Format check
+      run: black --check --diff mcp-server/
+
+    - name: Ruff
+      run: ruff check mcp-server/ --output-format=github || true
+
+    - name: mypy
+      run: mypy mcp-server/ --ignore-missing-imports --install-types --non-interactive || true
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Check Markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        config-file: '.github/markdown-link-check-config.json'
+
+    - name: Lint Markdown
+      uses: avto-dev/markdown-lint@v1
+      with:
+        args: '**/*.md'
+        config: '.github/markdownlint.json'

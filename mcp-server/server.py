@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import sys
-import subprocess
-import time
 import os
-
 import shutil
+import subprocess
+import sys
+import time
 from pathlib import Path
+
+from client import ImHexClient, ImHexError
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent
-
-from client import ImHexClient, ImHexError
-from tools import TOOLS, HANDLERS
+from tools import HANDLERS, TOOLS
 
 logger = logging.getLogger("imhex-mcp")
 
 IMHEX_PATHS_WIN = [
     Path(__file__).resolve().parent.parent / "dist" / "bin" / "imhex-gui.exe",
     Path(os.environ.get("PROGRAMFILES", "C:\\Program Files")) / "ImHex" / "imhex.exe",
-    Path(os.environ.get("PROGRAMFILES(X86)", "C:\\Program Files (x86)")) / "ImHex" / "imhex.exe",
+    Path(os.environ.get("PROGRAMFILES(X86)", "C:\\Program Files (x86)"))
+    / "ImHex"
+    / "imhex.exe",
     Path.home() / "AppData" / "Local" / "ImHex" / "imhex.exe",
     Path.home() / "scoop" / "imhex" / "current" / "imhex.exe",
 ]
@@ -100,7 +101,11 @@ def parse_args():
     p.add_argument("--port", type=int, default=31337)
     p.add_argument("--timeout", type=float, default=30.0)
     p.add_argument("--debug", action="store_true")
-    p.add_argument("--auto-launch", action="store_true", help="Auto-detect and launch ImHex on first tool call")
+    p.add_argument(
+        "--auto-launch",
+        action="store_true",
+        help="Auto-detect and launch ImHex on first tool call",
+    )
     return p.parse_args()
 
 
@@ -144,6 +149,7 @@ def main():
 
     try:
         import asyncio
+
         asyncio.run(run())
     except KeyboardInterrupt:
         pass

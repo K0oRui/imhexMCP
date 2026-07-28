@@ -1,6 +1,6 @@
 from mcp.types import Tool
 
-from . import file_ops, analysis, search, bookmarks, batch, extra
+from . import analysis, batch, bookmarks, extra, file_ops, search
 
 TOOLS: list[Tool] = []
 HANDLERS: dict[str, callable] = {}
