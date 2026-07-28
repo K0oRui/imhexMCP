@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:30:50 +1000
+Subject: [PATCH] patch 07: enable network interface by default
+
+---
+ plugins/builtin/source/content/background_services.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plugins/builtin/source/content/background_services.cpp b/plugins/builtin/source/content/background_services.cpp
+index e3b2c4f..a1b2c3d 100644
+--- a/plugins/builtin/source/content/background_services.cpp
++++ b/plugins/builtin/source/content/background_services.cpp
+@@ -24,7 +24,7 @@
+ 
+ namespace hex::plugin::builtin {
+ 
+-    static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.network_interface"> s_networkInterfaceServiceEnabled = false;
++    static ContentRegistry::Settings::SettingsVariable<bool, "hex.builtin.setting.general", "hex.builtin.setting.general.network_interface"> s_networkInterfaceServiceEnabled = true;
+     static ContentRegistry::Settings::SettingsVariable<int, "hex.builtin.setting.general", "hex.builtin.setting.general.backups.auto_backup_time"> s_autoBackupTime = 0;
+ 
+     namespace {

@@ -1,0 +1,31 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:23:23 +1000
+Subject: [PATCH 4/4] patch 04: Graceful settings handling in Provider base
+ class
+
+---
+ lib/libimhex/source/providers/provider.cpp | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/lib/libimhex/source/providers/provider.cpp b/lib/libimhex/source/providers/provider.cpp
+index 6703ce7..a507e6b 100644
+--- a/lib/libimhex/source/providers/provider.cpp
++++ b/lib/libimhex/source/providers/provider.cpp
+@@ -290,8 +290,14 @@ namespace hex::prv {
+     }
+ 
+     void Provider::loadSettings(const nlohmann::json &settings) {
+-        m_baseAddress = settings["baseAddress"];
+-        m_currPage    = settings["currPage"];
++        try {
++            m_baseAddress = settings["baseAddress"];
++            m_currPage    = settings["currPage"];
++        } catch (const std::exception &e) {
++            hex::log::debug("Provider::loadSettings: Using default values (baseAddress=0, currPage=0): {}", e.what());
++            m_baseAddress = 0;
++            m_currPage = 0;
++        }
+     }
+ 
+     std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {

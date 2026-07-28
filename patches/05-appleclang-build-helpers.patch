@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: imhexMCP <mcp@imhex.local>
+Date: Mon, 27 Jul 2026 23:30:00 +1000
+Subject: [PATCH 05] Add AppleClang compiler support to build_helpers.cmake
+
+Adds AppleClang 15.0.0 as a supported compiler alongside GCC and Clang,
+enabling macOS builds with Xcode.
+
+---
+ cmake/build_helpers.cmake | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/cmake/build_helpers.cmake b/cmake/build_helpers.cmake
+index c8f0cc5b9..90e464558 100644
+--- a/cmake/build_helpers.cmake
++++ b/cmake/build_helpers.cmake
+@@ -547,9 +547,11 @@ function(verifyCompiler)
+         message(FATAL_ERROR "ImHex requires GCC 12.0.0 or newer. Please use the latest GCC version.")
+     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "17.0.0")
+         message(FATAL_ERROR "ImHex requires Clang 17.0.0 or newer. Please use the latest Clang version.")
++    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15.0.0")
++        message(FATAL_ERROR "ImHex requires AppleClang 15.0.0 or newer. Please update Xcode.")
+     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+-        
+-    elseif (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
++
++    elseif (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+         message(FATAL_ERROR "ImHex can only be compiled with GCC or Clang. ${CMAKE_CXX_COMPILER_ID} is not supported.")
+     endif()
+ endfunction()
+-- 
+2.51.1

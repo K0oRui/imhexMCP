@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:23:03 +1000
+Subject: [PATCH 2/4] patch 02: Make FileProvider::open(bool) public
+
+---
+ plugins/builtin/include/content/providers/file_provider.hpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/plugins/builtin/include/content/providers/file_provider.hpp b/plugins/builtin/include/content/providers/file_provider.hpp
+index 6b21b4f..83c513b 100644
+--- a/plugins/builtin/include/content/providers/file_provider.hpp
++++ b/plugins/builtin/include/content/providers/file_provider.hpp
+@@ -44,6 +44,7 @@ namespace hex::plugin::builtin {
+         std::vector<MenuEntry> getMenuEntries() override;
+ 
+         [[nodiscard]] OpenResult open() override;
++        OpenResult open(bool directAccess);
+         void close() override;
+ 
+         void loadSettings(const nlohmann::json &settings) override;
+@@ -65,8 +66,6 @@ namespace hex::plugin::builtin {
+     private:
+         void handleFileChange();
+ 
+-        OpenResult open(bool directAccess);
+-
+     protected:
+         wolv::io::File m_file;
+         size_t m_fileSize = 0;

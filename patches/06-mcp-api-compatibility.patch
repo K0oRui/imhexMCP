@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:30:50 +1000
+Subject: [PATCH] patch 06: MCP API fixes
+
+---
+ plugins/mcp/source/plugin_mcp.cpp  | 11 ++++++-----
+ plugins/mcp/test_list_providers.py | 14 ++++++++++++++
+ 2 files changed, 20 insertions(+), 5 deletions(-)
+ create mode 100644 plugins/mcp/test_list_providers.py
+
+diff --git a/plugins/mcp/source/plugin_mcp.cpp b/plugins/mcp/source/plugin_mcp.cpp
+index ddb3f24..1ccbb6c 100644
+--- a/plugins/mcp/source/plugin_mcp.cpp
++++ b/plugins/mcp/source/plugin_mcp.cpp
+@@ -68,19 +68,20 @@ namespace hex::plugin::mcp {
+                 try {
+                     // Create and open file provider
+                     auto fileProvider = std::make_unique<hex::plugin::builtin::FileProvider>();
+-                    fileProvider->setPath(std::fs::path(request.path));
++                    fileProvider->setPickedPath(std::fs::path(request.path));
+ 
+-                    if (!fileProvider->open(false)) {
++                    auto openResult = fileProvider->open(false);
++                    if (openResult.isFailure()) {
+                         request.status = "error";
+-                        request.error_message = "Failed to open file";
+-                        hex::log::error("MCP: Failed to open file: {}", request.path);
++                        request.error_message = openResult.getErrorMessage();
++                        hex::log::error("MCP: Failed to open file '{}': {}", request.path, request.error_message);
+                         continue;
+                     }
+ 
+                     request.file_size = fileProvider->getActualSize();
+ 
+                     // Add provider - THIS happens on main thread, NOT network thread
+-                    hex::ImHexApi::Provider::add(std::move(fileProvider), true);
++                    hex::ImHexApi::Provider::add(std::shared_ptr<hex::prv::Provider>(std::move(fileProvider)), true);
+ 
+                     request.status = "success";
+                     hex::log::info("MCP: Successfully opened file: {}", request.path);
+diff --git a/plugins/mcp/test_list_providers.py b/plugins/mcp/test_list_providers.py
+new file mode 100644
+index 0000000..959f44e
+--- /dev/null
++++ b/plugins/mcp/test_list_providers.py
+@@ -0,0 +1,14 @@
++#!/usr/bin/env python3
++import sys
++sys.path.insert(0, '.')
++from server import ImHexClient, ServerConfig
++
++config = ServerConfig(imhex_host='localhost', imhex_port=31337)
++client = ImHexClient(config)
++
++try:
++    client.connect()
++    r = client.send_command("list/providers", {})
++    print(r)
++finally:
++    pass

@@ -15,6 +15,8 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/encoding_file.hpp>
+#include <hex/helpers/patches.hpp>
+#include <hex/providers/memory_provider.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -2323,7 +2325,129 @@ namespace hex::plugin::mcp {
                 }
             });
 
-            log::info("MCP plugin (improved) loaded - registered {} network endpoints", 28);
+            // file/create - Create a new empty file provider
+            ContentRegistry::CommunicationInterface::registerNetworkEndpoint("file/create", [](const nlohmann::json&) -> nlohmann::json {
+                try {
+                    auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file");
+                    if (!provider)
+                        throw std::runtime_error("Failed to create file provider");
+                    nlohmann::json result;
+                    result["success"] = true;
+                    result["provider_id"] = provider->getID();
+                    result["name"] = provider->getName();
+                    return result;
+                } catch (const std::exception &e) {
+                    throw std::runtime_error(fmt::format("Create provider failed: {}", e.what()));
+                }
+            });
+
+            // mem/new_provider - Create an in-memory provider from hex data
+            ContentRegistry::CommunicationInterface::registerNetworkEndpoint("mem/new_provider", [](const nlohmann::json &data) -> nlohmann::json {
+                try {
+                    std::string hex_data = data.at("data").get<std::string>();
+                    std::string name = data.value("name", "Memory Provider");
+
+                    // Parse hex string to bytes
+                    std::vector<u8> bytes;
+                    for (size_t i = 0; i < hex_data.length(); i += 2) {
+                        std::string byte_str = hex_data.substr(i, 2);
+                        bytes.push_back(static_cast<u8>(std::stoul(byte_str, nullptr, 16)));
+                    }
+
+                    auto provider = std::make_shared<MemoryProvider>(std::move(bytes), name);
+                    ImHexApi::Provider::add(std::move(provider));
+
+                    nlohmann::json result;
+                    result["success"] = true;
+                    result["size"] = bytes.size();
+                    result["name"] = name;
+                    return result;
+                } catch (const std::exception &e) {
+                    throw std::runtime_error(fmt::format("Create memory provider failed: {}", e.what()));
+                }
+            });
+
+            // bookmark/edit - Edit an existing bookmark by ID (remove + re-add)
+            ContentRegistry::CommunicationInterface::registerNetworkEndpoint("bookmark/edit", [](const nlohmann::json &data) -> nlohmann::json {
+                try {
+                    u64 id = data.at("id").get<u64>();
+                    std::string name = data.value("name", "");
+                    std::string comment = data.value("comment", "");
+                    u32 color = data.value("color", 0x00000000);
+
+                    // Remove the old bookmark
+                    ImHexApi::Bookmarks::remove(id);
+
+                    // Re-add with new values (offset/size are preserved from the removed entry)
+                    // Since remove+add doesn't preserve original values, we need the caller to provide them
+                    if (data.contains("offset") && data.contains("size")) {
+                        u64 offset = data.at("offset").get<u64>();
+                        size_t size = data.at("size").get<size_t>();
+                        u64 new_id = ImHexApi::Bookmarks::add(offset, size, name, comment, color);
+
+                        nlohmann::json result;
+                        result["success"] = true;
+                        result["new_id"] = new_id;
+                        return result;
+                    }
+
+                    nlohmann::json result;
+                    result["success"] = true;
+                    result["note"] = "Bookmark removed. Provide offset+size to re-add with new values.";
+                    return result;
+                } catch (const std::exception &e) {
+                    throw std::runtime_error(fmt::format("Edit bookmark failed: {}", e.what()));
+                }
+            });
+
+            // patch/export - Export patches to IPS/IPS32 format
+            ContentRegistry::CommunicationInterface::registerNetworkEndpoint("patch/export", [](const nlohmann::json &data) -> nlohmann::json {
+                try {
+                    auto provider = ImHexApi::Provider::get();
+                    if (!provider || !ImHexApi::Provider::isValid())
+                        throw std::runtime_error("No file is currently open");
+
+                    PatchKind kind = PatchKind::IPS;
+                    if (data.value("format", "ips") == "ips32")
+                        kind = PatchKind::IPS32;
+
+                    auto patches = Patches::fromProvider(provider);
+                    if (!patches)
+                        throw std::runtime_error("Failed to get patches from provider");
+
+                    std::vector<u8> patch_data;
+                    if (kind == PatchKind::IPS) {
+                        auto result = patches->toIPSPatch();
+                        if (!result)
+                            throw std::runtime_error("Failed to create IPS patch");
+                        patch_data = std::move(*result);
+                    } else {
+                        auto result = patches->toIPS32Patch();
+                        if (!result)
+                            throw std::runtime_error("Failed to create IPS32 patch");
+                        patch_data = std::move(*result);
+                    }
+
+                    // Convert to hex string
+                    std::stringstream ss;
+                    ss << std::hex << std::setfill('0');
+                    for (u8 byte : patch_data) {
+                        ss << std::setw(2) << static_cast<int>(byte);
+                    }
+
+                    nlohmann::json result;
+                    result["success"] = true;
+                    result["patch_data"] = ss.str();
+                    result["patch_size"] = patch_data.size();
+                    result["format"] = (kind == PatchKind::IPS) ? "ips" : "ips32";
+                    result["total_patches"] = patches->get().size();
+                    return result;
+                } catch (const std::exception &e) {
+                    throw std::runtime_error(fmt::format("Patch export failed: {}", e.what()));
+                }
+            });
+
+            log::info("MCP plugin (improved) loaded - registered {} network endpoints", 32);
         }
 
     }

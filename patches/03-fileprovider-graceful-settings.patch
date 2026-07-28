@@ -1,0 +1,73 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:23:16 +1000
+Subject: [PATCH 3/4] patch 03: Graceful settings handling in FileProvider
+
+---
+ .../content/providers/file_provider.cpp       | 41 +++++++++++--------
+ 1 file changed, 25 insertions(+), 16 deletions(-)
+
+diff --git a/plugins/builtin/source/content/providers/file_provider.cpp b/plugins/builtin/source/content/providers/file_provider.cpp
+index e7e453f..287368c 100644
+--- a/plugins/builtin/source/content/providers/file_provider.cpp
++++ b/plugins/builtin/source/content/providers/file_provider.cpp
+@@ -256,7 +256,12 @@ namespace hex::plugin::builtin {
+     }
+ 
+     prv::Provider::OpenResult FileProvider::open() {
+-        const auto maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
++        size_t maxMemoryFileSize = 128_MiB;
++        try {
++            maxMemoryFileSize = ContentRegistry::Settings::read<u64>("hex.builtin.setting.general", "hex.builtin.setting.general.max_mem_file_size", 128_MiB);
++        } catch (const std::exception &e) {
++            hex::log::debug("FileProvider::open: Settings not available, using default max memory file size ({}): {}", maxMemoryFileSize, e.what());
++        }
+ 
+         const auto &path = getPickedPath();
+ 
+@@ -378,26 +383,30 @@ namespace hex::plugin::builtin {
+     }
+ 
+     void FileProvider::loadSettings(const nlohmann::json &settings) {
+-        Provider::loadSettings(settings);
++        try {
++            Provider::loadSettings(settings);
++
++            auto pathString = settings.at("path").get<std::string>();
++            std::fs::path path = std::u8string(pathString.begin(), pathString.end());
++
++            if (auto projectPath = ProjectFile::getPath(); !projectPath.empty()) {
++                std::fs::path fullPath;
++                try {
++                    fullPath = std::fs::weakly_canonical(projectPath.parent_path() / path);
++                } catch (const std::fs::filesystem_error &) {
++                    fullPath = projectPath.parent_path() / path;
++                }
+ 
+-        auto pathString = settings.at("path").get<std::string>();
+-        std::fs::path path = std::u8string(pathString.begin(), pathString.end());
++                if (!wolv::io::fs::exists(fullPath))
++                    fullPath = path;
+ 
+-        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty()) {
+-            std::fs::path fullPath;
+-            try {
+-                fullPath = std::fs::weakly_canonical(projectPath.parent_path() / path);
+-            } catch (const std::fs::filesystem_error &) {
+-                fullPath = projectPath.parent_path() / path;
++                path = std::move(fullPath);
+             }
+ 
+-            if (!wolv::io::fs::exists(fullPath))
+-                fullPath = path;
+-
+-            path = std::move(fullPath);
++            this->setPickedPath(path);
++        } catch (const std::exception &e) {
++            hex::log::debug("FileProvider::loadSettings: Settings not complete, path should be set manually: {}", e.what());
+         }
+-
+-        this->setPickedPath(path);
+     }
+ 
+     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {

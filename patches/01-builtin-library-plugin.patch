@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: K0oRui <283966082+K0oRui@users.noreply.github.com>
+Date: Mon, 27 Jul 2026 23:22:55 +1000
+Subject: [PATCH 1/4] patch 01: Add LIBRARY_PLUGIN to builtin plugin
+
+---
+ plugins/builtin/CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/plugins/builtin/CMakeLists.txt b/plugins/builtin/CMakeLists.txt
+index 9f51755..778cba2 100644
+--- a/plugins/builtin/CMakeLists.txt
++++ b/plugins/builtin/CMakeLists.txt
+@@ -147,6 +147,8 @@ add_imhex_plugin(
+         ${JTHREAD_LIBRARIES}
+         plcli
+         libpl-gen
++
++    LIBRARY_PLUGIN
+ )
+ 
+ if (WIN32)
