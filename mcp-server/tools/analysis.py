@@ -238,160 +238,6 @@ TOOLS = [
         },
     ),
     Tool(
-        name="entropy",
-        description="Shortcut: calculate Shannon entropy for a region",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "provider_id": {
-                    "type": "integer",
-                    "description": "Provider ID (0 = current)",
-                    "minimum": 0,
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Bytes to analyze",
-                    "minimum": 1,
-                    "maximum": 10485760,
-                },
-            },
-        },
-    ),
-    Tool(
-        name="magic",
-        description="Shortcut: detect file type via magic numbers",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "provider_id": {
-                    "type": "integer",
-                    "description": "Provider ID (0 = current)",
-                    "minimum": 0,
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Bytes to scan",
-                    "minimum": 8,
-                    "maximum": 4096,
-                },
-            },
-        },
-    ),
-    Tool(
-        name="strings",
-        description="Shortcut: extract strings from binary data",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "provider_id": {
-                    "type": "integer",
-                    "description": "Provider ID (0 = current)",
-                    "minimum": 0,
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Bytes to scan (0 = entire file)",
-                    "minimum": 0,
-                    "maximum": 104857600,
-                },
-                "min_length": {
-                    "type": "integer",
-                    "description": "Minimum string length",
-                    "minimum": 1,
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["ascii", "utf16le", "all"],
-                    "description": "String type",
-                },
-                "max_strings": {
-                    "type": "integer",
-                    "description": "Max strings to return",
-                    "minimum": 1,
-                    "maximum": 10000,
-                },
-            },
-        },
-    ),
-    Tool(
-        name="statistics",
-        description="Shortcut: calculate byte frequency statistics",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "provider_id": {
-                    "type": "integer",
-                    "description": "Provider ID (0 = current)",
-                    "minimum": 0,
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Bytes to analyze",
-                    "minimum": 1,
-                    "maximum": 10485760,
-                },
-                "include_distribution": {
-                    "type": "boolean",
-                    "description": "Include full byte distribution",
-                },
-            },
-        },
-    ),
-    Tool(
-        name="disassemble",
-        description="Shortcut: disassemble machine code",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "provider_id": {
-                    "type": "integer",
-                    "description": "Provider ID (0 = current)",
-                    "minimum": 0,
-                },
-                "offset": {
-                    "type": "integer",
-                    "description": "Code offset",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Bytes to disassemble",
-                    "minimum": 1,
-                    "maximum": 4096,
-                },
-                "architecture": {
-                    "type": "string",
-                    "description": "CPU architecture (e.g. x86_64, arm)",
-                },
-                "base_address": {
-                    "type": "integer",
-                    "description": "Base address for instruction addresses",
-                    "minimum": 0,
-                },
-            },
-        },
-    ),
-    Tool(
         name="highlight_add",
         description="Add a colored highlight to a region",
         inputSchema={
@@ -586,11 +432,15 @@ def handle_hash(client: ImHexClient, args: dict) -> str:
     if "length" in args:
         params["length"] = args["length"]
     d = client.send_command("hash/calculate", params).get("data", {})
+    if "error" in d:
+        return f"Hash error: {d['error']}"
     return f"{args['algorithm'].upper()}: {d.get('hash', '')}"
 
 
 def handle_data_entropy(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/entropy", args).get("data", {})
+    if "error" in d:
+        return f"Entropy error: {d['error']}"
     return (
         f"Entropy: {d.get('entropy', 0):.4f} bits/byte  {d.get('interpretation', '')}"
     )
@@ -598,6 +448,8 @@ def handle_data_entropy(client: ImHexClient, args: dict) -> str:
 
 def handle_data_statistics(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/statistics", args).get("data", {})
+    if "error" in d:
+        return f"Statistics error: {d['error']}"
     lines = [
         f"Unique bytes: {d.get('unique_bytes', 0)}/256",
         f"Most common: 0x{d.get('most_common_byte', 0):02X} ({d.get('most_common_count', 0):,})",
@@ -615,13 +467,15 @@ def handle_data_statistics(client: ImHexClient, args: dict) -> str:
 
 def handle_data_strings(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/strings", args).get("data", {})
+    if "error" in d:
+        return f"Strings error: {d['error']}"
     strings = d.get("strings", [])
     lines = [f"Found {d.get('count', 0)} strings:"]
     for s in strings[:50]:
         v = s.get("value", "")
         if len(v) > 80:
             v = v[:77] + "..."
-        lines.append(f"  0x{s.get('offset', 0):08X} [{s.get('type', '')}] \"{v}\"")
+        lines.append(f'  0x{s.get("offset", 0):08X} [{s.get("type", "")}] "{v}"')
     if d.get("count", 0) > 50:
         lines.append(f"... and {d['count'] - 50} more")
     return "\n".join(lines)
@@ -629,6 +483,8 @@ def handle_data_strings(client: ImHexClient, args: dict) -> str:
 
 def handle_data_magic(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/magic", args).get("data", {})
+    if "error" in d:
+        return f"Magic error: {d['error']}"
     matches = d.get("matches", [])
     if not matches:
         return "No known file type signatures detected"
@@ -657,28 +513,10 @@ def handle_data_disassemble(client: ImHexClient, args: dict) -> str:
     return "\n".join(lines)
 
 
-def handle_entropy(client: ImHexClient, args: dict) -> str:
-    return handle_data_entropy(client, args)
-
-
-def handle_magic(client: ImHexClient, args: dict) -> str:
-    return handle_data_magic(client, args)
-
-
-def handle_strings(client: ImHexClient, args: dict) -> str:
-    return handle_data_strings(client, args)
-
-
-def handle_statistics(client: ImHexClient, args: dict) -> str:
-    return handle_data_statistics(client, args)
-
-
-def handle_disassemble(client: ImHexClient, args: dict) -> str:
-    return handle_data_disassemble(client, args)
-
-
 def handle_highlight_add(client: ImHexClient, args: dict) -> str:
     d = client.send_command("highlight/add", args).get("data", {})
+    if "error" in d:
+        return f"Highlight error: {d['error']}"
     return f"Highlight added: ID {d.get('id')} at 0x{d.get('offset', 0):X} ({d.get('size', 0)} bytes)"
 
 
@@ -696,21 +534,29 @@ def handle_selection_get(client: ImHexClient, _args: dict) -> str:
 
 def handle_selection_set(client: ImHexClient, args: dict) -> str:
     d = client.send_command("selection/set", args).get("data", {})
+    if "error" in d:
+        return f"Selection error: {d['error']}"
     return f"Selection set: 0x{d.get('offset', 0):X} ({d.get('size', 0)} bytes)"
 
 
 def handle_data_insert(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/insert", args).get("data", {})
+    if "error" in d:
+        return f"Insert error: {d['error']}"
     return f"Inserted {args['size']} bytes at 0x{args['offset']:X}. New size: {d.get('new_size', 0):,}"
 
 
 def handle_data_remove(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/remove", args).get("data", {})
+    if "error" in d:
+        return f"Remove error: {d['error']}"
     return f"Removed {args['size']} bytes at 0x{args['offset']:X}. New size: {d.get('new_size', 0):,}"
 
 
 def handle_data_find_replace(client: ImHexClient, args: dict) -> str:
     d = client.send_command("data/find_replace", args).get("data", {})
+    if "error" in d:
+        return f"Find/replace error: {d['error']}"
     return f"Found {d.get('matches_found', 0)} matches, replaced {d.get('replaced', 0)}"
 
 
@@ -746,10 +592,11 @@ def handle_analyze(client: ImHexClient, args: dict) -> str:
     return "\n".join(lines)
 
 
-def handle_section_headers(client: ImHexClient, args: dict) -> str:
+def handle_section_headers(client: ImHexClient, _args: dict) -> str:
     d = client.send_command(
         "pattern/execute",
-        {"code": """
+        {
+            "code": """
 u16 e_magic @ 0x00;
 u32 e_lfanew @ 0x3C;
 u16 e_machine @ 0x100;
@@ -762,7 +609,8 @@ u16 e_magic_pe @ 0x118;
 u16 e_machine_pe @ 0x11C;
 u16 e_sections_pe @ 0x120;
 u32 e_timedate @ 0x124;
-"""},
+"""
+        },
     ).get("data", {})
     if d.get("success"):
         lines = [f"Section headers ({d.get('pattern_count', 0)} fields):"]
@@ -775,15 +623,16 @@ u32 e_timedate @ 0x124;
 
 
 def handle_constants_search(client: ImHexClient, args: dict) -> str:
+    limit = args.get("limit", 20)
     d = client.send_command(
-        "search/find", {"pattern": args["value"], "type": args["type"], "limit": 20}
+        "search/find", {"pattern": args["value"], "type": args["type"], "limit": limit}
     ).get("data", {})
     matches = d.get("matches", [])
     total = d.get("total_matches", len(matches))
     lines = [
         f"Pattern: '{args['value']}' ({args['type']})  Total: {total}  Showing: {len(matches)}"
     ]
-    for i, m in enumerate(matches[:20], 1):
+    for i, m in enumerate(matches[:limit], 1):
         lines.append(f"  {i}. 0x{m:X}")
     return "\n".join(lines)
 
@@ -798,11 +647,11 @@ HANDLERS = {
     "data_strings": handle_data_strings,
     "data_magic": handle_data_magic,
     "data_disassemble": handle_data_disassemble,
-    "entropy": handle_entropy,
-    "magic": handle_magic,
-    "strings": handle_strings,
-    "statistics": handle_statistics,
-    "disassemble": handle_disassemble,
+    "entropy": handle_data_entropy,
+    "magic": handle_data_magic,
+    "strings": handle_data_strings,
+    "statistics": handle_data_statistics,
+    "disassemble": handle_data_disassemble,
     "highlight_add": handle_highlight_add,
     "highlight_remove": handle_highlight_remove,
     "selection_get": handle_selection_get,

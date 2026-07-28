@@ -1,5 +1,10 @@
+import base64
+
 from client import ImHexClient
 from mcp.types import Tool
+
+from .analysis import handle_read_hex, handle_selection_set, handle_write_hex
+from .file_ops import handle_list_files
 
 TOOLS = [
     Tool(
@@ -107,52 +112,6 @@ TOOLS = [
                 },
             },
             "required": ["offset", "length"],
-        },
-    ),
-    Tool(
-        name="file_list",
-        description="Alias for list_files",
-        inputSchema={"type": "object", "properties": {}, "required": []},
-    ),
-    Tool(
-        name="read_data",
-        description="Alias for read_hex",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "length": {
-                    "type": "integer",
-                    "description": "Bytes to read",
-                    "minimum": 1,
-                    "maximum": 1048576,
-                },
-            },
-            "required": ["offset", "length"],
-        },
-    ),
-    Tool(
-        name="write_data",
-        description="Alias for write_hex",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "offset": {
-                    "type": "integer",
-                    "description": "Start offset",
-                    "minimum": 0,
-                },
-                "data": {
-                    "type": "string",
-                    "description": "Hex data to write (e.g. '0A1B2C3D')",
-                    "pattern": "^[0-9A-Fa-f]+$",
-                },
-            },
-            "required": ["offset", "data"],
         },
     ),
     Tool(
@@ -412,7 +371,16 @@ def handle_decode_data(client: ImHexClient, args: dict) -> str:
 
 
 def handle_diff_analyze(client: ImHexClient, args: dict) -> str:
-    return str(client.send_command("diff/analyze", args).get("data", {}))
+    d = client.send_command("diff/analyze", args).get("data", {})
+    regions = d.get("regions", [])
+    lines = [
+        f"Algorithm: {d.get('algorithm', '?')}  Provider 1: {d.get('provider1_id', '?')}  Provider 2: {d.get('provider2_id', '?')}  Regions: {d.get('total_regions', len(regions))}"
+    ]
+    for r in regions:
+        lines.append(
+            f"  {r.get('type', '?')} @ 0x{r.get('offset', 0):X} size={r.get('size', 0)}"
+        )
+    return "\n".join(lines)
 
 
 def handle_disassemble_bytes(client: ImHexClient, args: dict) -> str:
@@ -437,24 +405,6 @@ def handle_read_chunked(client: ImHexClient, args: dict) -> str:
         "data/read", {"offset": args["offset"], "length": args["length"]}
     ).get("data", {})
     return f"Offset: 0x{args['offset']:X}  Length: {args['length']} bytes\nHex:\n{d.get('data', '')}"
-
-
-def handle_file_list(client: ImHexClient, _args: dict) -> str:
-    from .file_ops import handle_list_files
-
-    return handle_list_files(client, {})
-
-
-def handle_read_data(client: ImHexClient, args: dict) -> str:
-    from .analysis import handle_read_hex
-
-    return handle_read_hex(client, args)
-
-
-def handle_write_data(client: ImHexClient, args: dict) -> str:
-    from .analysis import handle_write_hex
-
-    return handle_write_hex(client, args)
 
 
 def handle_hexdump(client: ImHexClient, args: dict) -> str:
@@ -539,18 +489,14 @@ def handle_pattern_execute(client: ImHexClient, args: dict) -> str:
 
 
 def handle_goto(client: ImHexClient, args: dict) -> str:
-    from .analysis import handle_selection_set
-
     return handle_selection_set(client, {"offset": args["offset"], "size": 1})
 
 
-def handle_encode_data(client: ImHexClient, _args: dict) -> str:
-    import base64
-
-    data = _args["data"].encode() if isinstance(_args["data"], str) else _args["data"]
-    if _args["encoding"] == "hex":
+def handle_encode_data(client: ImHexClient, args: dict) -> str:
+    data = args["data"].encode() if isinstance(args["data"], str) else args["data"]
+    if args["encoding"] == "hex":
         return f"Encoded (hex): {data.hex().upper()}"
-    elif _args["encoding"] == "base64":
+    elif args["encoding"] == "base64":
         return f"Encoded (base64): {base64.b64encode(data).decode()}"
     return "Unknown encoding"
 
@@ -594,7 +540,7 @@ def handle_data_encode(client: ImHexClient, args: dict) -> str:
 
 
 def handle_list_all_tools(_client: ImHexClient, _args: dict) -> str:
-    from tools import TOOLS
+    from . import TOOLS
 
     lines = [f"ImHex MCP - {len(TOOLS)} tools available", ""]
     for t in TOOLS:
@@ -646,9 +592,9 @@ HANDLERS = {
     "diff_analyze": handle_diff_analyze,
     "disassemble_bytes": handle_disassemble_bytes,
     "read_chunked": handle_read_chunked,
-    "file_list": handle_file_list,
-    "read_data": handle_read_data,
-    "write_data": handle_write_data,
+    "file_list": handle_list_files,
+    "read_data": handle_read_hex,
+    "write_data": handle_write_hex,
     "hexdump": handle_hexdump,
     "disassemble_x64": handle_disassemble_x64,
     "disassemble_x86": handle_disassemble_x86,

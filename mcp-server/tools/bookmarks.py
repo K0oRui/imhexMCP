@@ -44,32 +44,6 @@ TOOLS = [
         },
     ),
     Tool(
-        name="add_bookmark",
-        description="Alias for bookmark_add",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "offset": {
-                    "type": "integer",
-                    "description": "Offset of the bookmark",
-                    "minimum": 0,
-                },
-                "size": {
-                    "type": "integer",
-                    "description": "Size of the bookmarked region",
-                    "minimum": 1,
-                },
-                "name": {"type": "string", "description": "Name for the bookmark"},
-                "color": {
-                    "type": "string",
-                    "description": "Hex color (e.g. FF0000)",
-                    "pattern": "^[0-9A-Fa-f]{6}$",
-                },
-            },
-            "required": ["offset", "size", "name"],
-        },
-    ),
-    Tool(
         name="list_bookmarks",
         description="List all bookmarks",
         inputSchema={"type": "object", "properties": {}, "required": []},

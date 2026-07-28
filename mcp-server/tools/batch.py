@@ -1,3 +1,5 @@
+import pathlib
+
 from client import ImHexClient
 from mcp.types import Tool
 
@@ -122,7 +124,7 @@ TOOLS = [
                 },
                 "algorithm": {
                     "type": "string",
-                    "enum": ["myers"],
+                    "enum": ["simple", "myers"],
                     "description": "Diff algorithm",
                 },
                 "max_diff_regions": {
@@ -198,9 +200,6 @@ TOOLS = [
 
 
 def handle_batch_open_directory(client: ImHexClient, args: dict) -> str:
-    import pathlib
-    import time
-
     directory = args["directory"]
     max_files = args.get("max_files", 100)
     d = pathlib.Path(directory)
@@ -222,28 +221,13 @@ def handle_batch_open_directory(client: ImHexClient, args: dict) -> str:
     for fp in files:
         try:
             resp = client.send_command("file/open", {"path": fp}).get("data", {})
-            request_id = resp.get("request_id")
             pid = resp.get("provider_id")
             if pid is not None:
                 opened += 1
                 lines.append(f"  ID {pid}: {pathlib.Path(fp).name}")
-            elif request_id is not None:
-                for _ in range(20):
-                    time.sleep(0.15)
-                    status = client.send_command(
-                        "file/open/status", {"request_id": request_id}
-                    )
-                    s = status.get("data", {}).get("status") or status.get("status")
-                    if s == "success":
-                        opened += 1
-                        lines.append(f"  {pathlib.Path(fp).name}")
-                        break
-                    if s == "error":
-                        break
-                else:
-                    errors.append(
-                        f"{pathlib.Path(fp).name}: timed out waiting for open"
-                    )
+            else:
+                opened += 1
+                lines.append(f"  {pathlib.Path(fp).name}")
         except Exception as e:
             errors.append(f"{pathlib.Path(fp).name}: {e}")
     files_now = client.send_command("file/list", {}).get("data", {}).get("files", [])

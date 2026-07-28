@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 import logging
 import os
 import shutil
@@ -11,7 +12,7 @@ from pathlib import Path
 from client import ImHexClient, ImHexError
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import TextContent
+from mcp.types import TextContent, Tool
 from tools import HANDLERS, TOOLS
 
 logger = logging.getLogger("imhex-mcp")
@@ -40,14 +41,14 @@ def find_imhex() -> Path | None:
 def launch_imhex(path: Path) -> bool:
     global _imhex_process
     try:
-        _imhex_process = subprocess.Popen([str(path)], shell=True)
+        _imhex_process = subprocess.Popen([str(path)])
         return True
     except Exception as e:
         logger.warning("Failed to launch ImHex: %s", e)
         return False
 
 
-def stop_imhex():
+def stop_imhex() -> None:
     global _imhex_process
     if _imhex_process:
         try:
@@ -75,27 +76,29 @@ def wait_for_imhex(host: str, port: int, timeout: float = 15.0) -> bool:
     return False
 
 
-def ensure_connected(client: ImHexClient, host: str, port: int, auto_launch: bool):
+def ensure_connected(
+    client: ImHexClient, host: str, port: int, auto_launch: bool
+) -> None:
     if client.is_connected:
         return
     try:
         client.connect()
-    except Exception:
+    except Exception as e:
         if not auto_launch:
             raise
         logger.info("ImHex not running, launching...")
         imhex_path = find_imhex()
         if not imhex_path:
-            raise RuntimeError("ImHex not found")
+            raise RuntimeError("ImHex not found") from e
         if not launch_imhex(imhex_path):
-            raise RuntimeError("Failed to launch ImHex")
+            raise RuntimeError("Failed to launch ImHex") from e
         logger.info("Waiting for ImHex...")
         if not wait_for_imhex(host, port):
-            raise RuntimeError("Timed out waiting for ImHex")
+            raise TimeoutError("Timed out waiting for ImHex") from e
         client.connect()
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="ImHex MCP Server")
     p.add_argument("--host", default="localhost")
     p.add_argument("--port", type=int, default=31337)
@@ -109,7 +112,7 @@ def parse_args():
     return p.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse_args()
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO,
@@ -122,11 +125,11 @@ def main():
     app = Server("imhex")
 
     @app.list_tools()
-    async def list_tools():
+    async def list_tools() -> list[Tool]:
         return TOOLS
 
     @app.call_tool()
-    async def call_tool(name: str, arguments: dict):
+    async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         handler = HANDLERS.get(name)
         if not handler:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
@@ -143,13 +146,11 @@ def main():
             logger.exception("Tool error")
             return [TextContent(type="text", text=f"Error: {e}")]
 
-    async def run():
+    async def run() -> None:
         async with stdio_server() as (rs, ws):
             await app.run(rs, ws, app.create_initialization_options())
 
     try:
-        import asyncio
-
         asyncio.run(run())
     except KeyboardInterrupt:
         pass

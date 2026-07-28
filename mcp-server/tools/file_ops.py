@@ -213,7 +213,13 @@ TOOLS = [
 
 
 def handle_get_capabilities(client: ImHexClient, _args: dict) -> str:
-    return str(client.send_command("imhex/capabilities").get("data", {}))
+    d = client.send_command("imhex/capabilities").get("data", {})
+    return (
+        f"ImHex {d.get('version', '?')}  "
+        f"Commit: {d.get('commit', '?')}  "
+        f"Branch: {d.get('branch', '?')}  "
+        f"Commands: {d.get('available_commands', d.get('commands', '?'))}"
+    )
 
 
 def handle_set_pattern_code(client: ImHexClient, args: dict) -> str:
@@ -225,27 +231,8 @@ def handle_open_file(client: ImHexClient, args: dict) -> str:
     fp = Path(args["path"])
     if not fp.exists():
         return f"Error: file not found: {args['path']}"
-    resp = client.send_command("file/open", {"path": str(fp.absolute())})
-    request_id = resp.get("data", {}).get("request_id")
-    if request_id is None:
-        return f"File open requested: {args['path']}"
-    import time
-
-    for _ in range(20):
-        time.sleep(0.15)
-        status = client.send_command("file/open/status", {"request_id": request_id})
-        s = status.get("data", {}).get("status") or status.get("status")
-        if s == "success":
-            size = status.get("data", {}).get("file_size", 0)
-            return f"Opened: {args['path']}  Size: {size:,} bytes"
-        if s == "error":
-            err = status.get("data", {}).get("error", "unknown")
-            return f"Error opening file: {err}"
-    providers = client.send_command("file/list", {}).get("data", {}).get("files", [])
-    for p in providers:
-        if str(fp.absolute()) in p.get("name", ""):
-            return f"Opened: {args['path']}  Size: {p.get('size', 0):,} bytes (ID {p.get('id')})"
-    return f"File open requested: {args['path']} (request ID: {request_id})"
+    client.send_command("file/open", {"path": str(fp.absolute())})
+    return f"File open requested: {args['path']}"
 
 
 def handle_list_files(client: ImHexClient, _args: dict) -> str:

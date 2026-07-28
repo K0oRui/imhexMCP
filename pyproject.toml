@@ -8,7 +8,35 @@ version = "0.4.0"
 description = "ImHex MCP Server - AI assistant integration for ImHex hex editor"
 requires-python = ">=3.10"
 
+[tool.ruff]
+line-length = 88
+
 [tool.ruff.lint]
 ignore = ["BLE001", "S110", "N999"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+[tool.pytest.ini_options]
+testpaths = ["mcp-server/tests"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-anyio>=4.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10",
+    "ipython>=8.0",
+]
+lint = [
+    "ruff>=0.5.0",
+    "mypy>=1.10",
+]
 
 

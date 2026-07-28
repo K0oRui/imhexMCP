@@ -85,62 +85,6 @@ TOOLS = [
             "required": ["matches", "output_path"],
         },
     ),
-    Tool(
-        name="search_multi",
-        description="Alias for multi_search",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "patterns": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "pattern": {"type": "string"},
-                            "type": {"type": "string", "enum": ["hex", "text"]},
-                        },
-                        "required": ["pattern", "type"],
-                    },
-                    "minItems": 1,
-                    "maxItems": 20,
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Max results per pattern",
-                    "minimum": 1,
-                    "maximum": 100000,
-                },
-            },
-            "required": ["patterns"],
-        },
-    ),
-    Tool(
-        name="export_search",
-        description="Alias for export_search_results",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "matches": {
-                    "type": "array",
-                    "items": {"type": "integer"},
-                    "description": "Array of match offsets",
-                },
-                "output_path": {"type": "string", "description": "Output file path"},
-                "format": {
-                    "type": "string",
-                    "enum": ["json", "csv"],
-                    "description": "Export format",
-                },
-                "context_bytes": {
-                    "type": "integer",
-                    "description": "Context bytes per match",
-                    "minimum": 0,
-                    "maximum": 256,
-                },
-            },
-            "required": ["matches", "output_path"],
-        },
-    ),
 ]
 
 

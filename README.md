@@ -5,7 +5,7 @@
 
 <div align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--2.0-blue?style=for-the-badge" alt="license" /></a>
-    <img src="https://img.shields.io/badge/tools-77-success?style=for-the-badge" alt="tools" />
+    <img src="https://img.shields.io/badge/tools-66-success?style=for-the-badge" alt="tools" />
     <img src="https://img.shields.io/badge/C++%20endpoints-36-success?style=for-the-badge" alt="endpoints" />
 </div>
 
@@ -16,9 +16,9 @@
 > **Fork** — this repository provides an MCP (Model Context Protocol) server that exposes ImHex hex editor capabilities to AI assistants. It consists of a Python MCP server and a C++ ImHex plugin communicating via TCP (port 31337).
 >
 > ## Modernization
-> - **Server refactored** — monolithic `server.py` (~2465 lines) split into modular `tools/` package with 7 modules; each tool is a `Tool()` definition with a dedicated handler function. Server entry point reduced to ~60 lines.
+> - **Server refactored** — monolithic `server.py` (~2465 lines) split into modular `tools/` package with 7 modules; each tool is a `Tool()` definition with a dedicated handler function. Server entry point reduced to ~163 lines.
 > - **Client extracted** — standalone `ImHexClient` class in `client.py` handles TCP connect/disconnect/send/receive with retry logic.
-> - **Tool count expanded** — from 27 tools to 77 tools (50 new), organized into `file_ops.py`, `analysis.py`, `search.py`, `bookmarks.py`, `batch.py`, `extra.py`.
+> - **Tool count expanded** — from 27 tools to 66 tools (39 new + 11 alias entries), organized into `file_ops.py`, `analysis.py`, `search.py`, `bookmarks.py`, `batch.py`, `extra.py`.
 > - **C++ plugin extended** — from 30 endpoints to 36 endpoints (6 new): `file/create`, `mem/new_provider`, `bookmark/edit`, `patch/export`, `selection/get`, `selection/set`.
 > - **Stale files removed** — 170+ files cleaned up: old test files, benchmark scripts, unused `lib/` directory (async client, cache, batching, etc.), `docs/` directory (consolidated), Hypothesis cache.
 >
@@ -110,7 +110,7 @@ Configure in `opencode.json`:
 ```
 imhexMCP/
 ├── mcp-server/
-│   ├── server.py          # MCP server entry point (~60 lines)
+│   ├── server.py          # MCP server entry point (~163 lines)
 │   ├── client.py          # TCP client for ImHex communication
 │   │
 │   ├── tools/
@@ -198,4 +198,4 @@ Copy-Item plugins\mcp.hexplug -Destination ..\dist\bin\
 - Keep `tools/` module structure — add new tools to the appropriate module
 - C++ endpoints go in `plugin/source/plugin_mcp.cpp` in the `registerNetworkEndpoint` block
 - Both a Python Tool definition (`TOOLS`) and handler (`HANDLERS`) must be registered
-- Verify with `python -c "from tools import TOOLS, HANDLERS; print(f'{len(TOOLS)} tools, {len(HANDLERS)} handlers')"` before committing
+- Verify with `cd mcp-server && python -c "from tools import TOOLS, HANDLERS; print(f'{len(TOOLS)} tools, {len(HANDLERS)} handlers')"` before committing
