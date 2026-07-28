@@ -1,12 +1,14 @@
 name: Security
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
   schedule:
-    # Run weekly on Mondays at 9 AM UTC
     - cron: '0 9 * * 1'
 
 jobs:
@@ -21,7 +23,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Install bandit
       run: |
@@ -29,9 +31,8 @@ jobs:
 
     - name: Run Bandit
       run: |
-        bandit -r lib/ mcp-server/ -f json -o bandit-report.json || true
-        bandit -r lib/ mcp-server/ -f screen
-      continue-on-error: true
+        bandit -r mcp-server/ -f json -o bandit-report.json || true
+        bandit -r mcp-server/ -f screen || true
 
     - name: Upload Bandit report
       uses: actions/upload-artifact@v4
@@ -50,17 +51,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
-    - name: Install dependencies
+    - name: Install safety
       run: |
         pip install safety
 
     - name: Run Safety check
       run: |
         safety check --json --output safety-report.json || true
-        safety check
-      continue-on-error: true
+        safety check || true
 
     - name: Upload Safety report
       uses: actions/upload-artifact@v4

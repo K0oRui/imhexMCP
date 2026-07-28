@@ -1,5 +1,5 @@
 <div align="center">
-    <img width="400" src="https://raw.githubusercontent.com/WerWolv/ImHex/master/resources/dist/common/logo/ImHexLogoSVGBG.svg" alt="imhex">
+    <img height="300px" style="margin: 0; padding: 0" src="https://raw.githubusercontent.com/WerWolv/ImHex/master/resources/dist/common/logo/ImHexLogoSVGBG.svg" alt="imhex">
     </br>
 </div>
 

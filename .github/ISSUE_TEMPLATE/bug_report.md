@@ -7,35 +7,36 @@ assignees: ''
 ---
 
 ## Bug Description
-A clear and concise description of what the bug is.
+
+A clear description of what the bug is.
 
 ## Steps to Reproduce
-1. Run setup script: `./setup-imhex-mcp.sh`
-2. Apply patches...
-3. Build ImHex...
-4. See error...
+
+1. Start the MCP server: `python mcp-server/server.py`
+2. Send request...
+3. See error...
 
 ## Expected Behavior
+
 What you expected to happen.
 
 ## Actual Behavior
+
 What actually happened.
 
 ## Environment
-- **OS:** [e.g. macOS 13.0, Ubuntu 22.04]
-- **Architecture:** [e.g. ARM64, x86_64]
-- **ImHex Commit:** [run `cd ImHex && git rev-parse HEAD`]
-- **Patches Applied:** [e.g. all 10 patches, or specific ones]
+
+- **OS:** [e.g. Windows 11, Ubuntu 22.04]
+- **ImHex Version:** [commit hash or release]
+- **Python Version:**
 
 ## Error Messages
-```
-Paste any error messages here
-```
 
-## Additional Context
-Add any other context about the problem here (screenshots, logs, etc.)
+```
+Paste any error messages here (from MCP server console or ImHex console)
+```
 
 ## Checklist
+
 - [ ] I have searched existing issues
-- [ ] I am using the latest patches from this repository
-- [ ] I have included relevant error messages/logs
+- [ ] I am using the latest version
