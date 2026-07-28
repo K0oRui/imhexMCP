@@ -1,0 +1,41 @@
+name: Cleanup
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      keep_runs:
+        description: Number of recent runs to keep per workflow
+        default: '5'
+        required: false
+
+jobs:
+  cleanup:
+    name: Purge old runs and caches
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete old workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP: ${{ github.event.inputs.keep_runs || '5' }}
+        run: |
+          REPO="${{ github.repository }}"
+          for workflow in $(gh api "/repos/$REPO/actions/workflows" --jq '.workflows[].id'); do
+            gh api "/repos/$REPO/actions/workflows/$workflow/runs?per_page=100" --jq '.workflow_runs' \
+              | jq -r "sort_by(.run_number) | reverse | .[$KEEP:] | .[].id" \
+              | xargs -r -I{} gh api -X DELETE "/repos/$REPO/actions/runs/{}"
+          done
+
+      - name: Delete old caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ github.repository }}"
+          gh api "/repos/$REPO/actions/caches?per_page=100" --jq '.actions_caches[] | "\(.id) \(.last_accessed_at)"' \
+            | sort -k2 -r \
+            | tail -n +6 \
+            | awk '{print $1}' \
+            | xargs -r -I{} gh api -X DELETE "/repos/$REPO/actions/caches/{}"
