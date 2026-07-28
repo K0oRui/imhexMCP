@@ -39,6 +39,12 @@ jobs:
           git clone --depth=1 https://github.com/WerWolv/ImHex.git
           echo "IMHEX_COMMIT=$(cd ImHex && git rev-parse HEAD)" >> $GITHUB_ENV
 
+      - name: Stage plugin source
+        shell: bash
+        run: |
+          mkdir -p ImHex/plugins/mcp/source
+          cp imhexMCP/plugin/source/plugin_mcp.cpp ImHex/plugins/mcp/source/
+
       - name: Dry-run patches
         shell: bash
         run: |
@@ -47,13 +53,11 @@ jobs:
             git apply --check "$patch" || { echo "FAILED: $(basename $patch)"; exit 1; }
           done
 
-      - name: Apply patches and sync source
+      - name: Apply patches
         shell: bash
         run: |
           cd ImHex
           git apply ../imhexMCP/patches/[0-9]*.patch
-          mkdir -p plugins/mcp/source
-          cp ../imhexMCP/plugin/source/plugin_mcp.cpp plugins/mcp/source/
 
       - name: Verify plugin source
         shell: bash
@@ -90,13 +94,13 @@ jobs:
         run: |
           brew install cmake ninja pkg-config
 
-      - name: Clone ImHex, apply patches, sync source
+      - name: Clone ImHex, stage source, apply patches
         run: |
           git clone --depth=1 https://github.com/WerWolv/ImHex.git
+          mkdir -p ImHex/plugins/mcp/source
+          cp imhexMCP/plugin/source/plugin_mcp.cpp ImHex/plugins/mcp/source/
           cd ImHex
           git apply ../imhexMCP/patches/[0-9]*.patch
-          mkdir -p plugins/mcp/source
-          cp ../imhexMCP/plugin/source/plugin_mcp.cpp plugins/mcp/source/
 
       - name: Build
         run: |
