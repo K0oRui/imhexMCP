@@ -1,6 +1,6 @@
 pytest>=7.0
 pytest-cov>=4.0
 pytest-anyio>=4.0
-ruff>=0.5.0
+ruff>=0.16.0
 mypy>=1.10
 ipython>=8.0
